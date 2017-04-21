@@ -16,12 +16,12 @@ var ListArea = React.createClass({
     var output;
     if (this.state.list.result) {
       output = this.state.list.result.map(function(data, i) {
-          return <div className='pollBox' key={i} onClick={this.props.onClick.bind(null, data)}>{data.question}</div>;
+          return <div className='card selectablecard' key={i} onClick={this.props.onClick.bind(null, data)}>{data.question}</div>;
       }, this)
     } else {
       output = '';
     }
-    return (<div>
+    return (<div className="grid-by-rows">
       {output}
       </div>)
   }

@@ -30,16 +30,24 @@ passport.use(new GoogleStrategy({
   // callbackURL: "http://oauth-template-decky.herokuapp.com/auth/google/callback",
   callbackURL: AUTHHOST + '/auth/google/callback',
   passReqToCallback   : true
-},
-function(request, accessToken, refreshToken, profile, done) {
-  // Stuff to do after verified.
-  console.log("PROFILE: " + profile);
-  console.log("ACCESS TOKEN: " + JSON.stringify(accessToken));
-  console.log("REFRESH TOKEN: " + JSON.stringify(refreshToken));
-  console.log(done);
-  return done(null, profile);
-}
+  },
+  function(request, accessToken, refreshToken, profile, done) {
+    // Stuff to do after verified.
+    console.log("PROFILE: " + profile);
+    console.log("ACCESS TOKEN: " + JSON.stringify(accessToken));
+    console.log("REFRESH TOKEN: " + JSON.stringify(refreshToken));
+    // Store data in mongo collection
+    // console.log(done);
+    mongowrap.saveToken(accessToken, profile, function(err, result) {
+      if (err) {
+        console.log(err);
+      } else {
+        return done(null, [accessToken, profile]);
+      }
+    })
+  }
 ));
+
 
 // Serializing is part of session handling
 passport.serializeUser(function(user, done) {
@@ -51,8 +59,32 @@ passport.deserializeUser(function(user, done) {
 });
 
 app.get('/', function(request, response) {
-  response.render('pages/index', {'user': null, 'poll':null});
+  response.render('pages/index', {'user': null, 'poll': null, 'token': null});
 });
+
+app.get('/tokendetails/:ACCESSTOKEN', function(request, response) {
+  // Query mongodb for profile corresponding to access token.
+  mongowrap.getTokenDetails(request.params.ACCESSTOKEN, function(err, result) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("sending result for tokendetails");
+      console.log(result);
+      response.send(result);
+    }
+  })
+})
+
+app.get('/logout/:ACCESSTOKEN', function(request, response) {
+  // Delete profile with this access token from mongodb.
+  mongowrap.removeToken(request.params.ACCESSTOKEN, function(err, result) {
+    if (err) {
+      console.log(err);
+    } else {
+      response.send(result);
+    }
+  });
+})
 
 // Request to backend for initial polls.
 app.get('/api/getpolls', function(request, response) {
@@ -134,7 +166,7 @@ app.get('/api/poll/:POLLID', function (request, response) {
     console.log(pollResult)
     if (pollResult) {
       // Found a matching pollid
-      response.render('pages/index', {'user':null, 'poll':pollResult});
+      response.render('pages/index', {'user':null, 'poll':pollResult, 'token': null});
     } else {
       // Did not find a matching pollid
       response.send("Could not find a poll with that id!");
@@ -152,7 +184,7 @@ passport.authenticate('google'),
 function(request, response) {
   console.log("finished authentication");
   if (request.user) {
-    response.render('pages/index', {'user':request.user.emails[0].value, 'poll':null});
+    response.render('pages/index', {'user':request.user[1].name.givenName, 'token':request.user[0], 'poll': null});
   } else { response.jsonp(401); }
 });
 

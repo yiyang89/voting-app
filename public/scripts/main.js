@@ -2,8 +2,8 @@
 // Use React and jQuery
 // Globals:
 
-var user = myUser? myUser : null;
-console.log("user: "+user);
+var username = myUser;
+var accessTokenFromServer = token;
 
 // Render app
 ReactDOM.render(<AppComponent />, document.getElementById('votingApp'));

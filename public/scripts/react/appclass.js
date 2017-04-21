@@ -3,7 +3,6 @@ console.log("voting.js loaded successfully");
 // React classes
 var AppComponent = React.createClass({
   getInitialState: function() {
-    // if (myPoll) {this.showReferredPoll();}
     if (myPoll) {
       return {
         showList: false,
@@ -13,7 +12,15 @@ var AppComponent = React.createClass({
         globalList: []
       };
     } else {
+      var login = accessTokenFromServer? true : false;
+      if (login) {
+        localStorage._decky_accesstoken = accessTokenFromServer;
+      }
       return {
+        username: username,
+        accesstokenserver: accessTokenFromServer,
+        accesstokenlocal: localStorage._decky_accesstoken,
+        loggedin: login,
         showList: true,
         pollTarget: {},
         showCreateNew: false,
@@ -21,6 +28,32 @@ var AppComponent = React.createClass({
         globalList: []
       };
     }
+  },
+  componentWillMount: function() {
+    if (localStorage._decky_accesstoken) {
+      // User is currently logged in
+        $.getJSON('/tokendetails/'+localStorage._decky_accesstoken, function(result) {
+          this.setState({
+            username: result.profile.name.givenName,
+            accesstokenserver: result.accessToken,
+            accesstokenlocal: localStorage._decky_accesstoken,
+            loggedin: true
+          })
+        }.bind(this))
+    }
+  },
+  logout: function() {
+    // Empty localstorage
+    $.getJSON('/logout/'+accessTokenFromServer, function(result) {
+      localStorage._decky_accesstoken = null;
+      this.setState({
+        username: null,
+        accesstokenserver: null,
+        accesstokenlocal: null,
+        loggedin: false
+      });
+      console.log("logged out.");
+    }.bind(this));
   },
   hideAll: function() {
     this.setState({
@@ -49,8 +82,7 @@ var AppComponent = React.createClass({
   },
   handleVoteClick: function(questionId, option) {
     // Request to server to add a vote
-    var username = user? user : '';
-    var params = "id=" + questionId + "&answer=" + encodeURI(option) + "&userid=" + username;
+    var params = "id=" + questionId + "&answer=" + encodeURI(option) + "&userid=" + this.state.username;
     console.log("Sending params: " + params);
     this.serverRequest = $.getJSON('/api/votepoll?'+params, function (result) {
       // On vote success: show confirmation?
@@ -63,12 +95,11 @@ var AppComponent = React.createClass({
     // submit question, answer1 and answer2 to the server.
     // Implement a check for EMPTY question, answer1, or answer2
     console.log(answers);
-    var username = user? user : '';
     var answerParam = '';
     answers.forEach(function(answer) {
       answerParam = answerParam.concat("&answer="+answer);
     });
-    var params = "question=" + question + answerParam + "&userid=" + username;
+    var params = "question=" + question + answerParam + "&userid=" + this.state.username;
     this.serverRequest = $.getJSON('/api/createpoll?'+params, function (result) {
       this.setState({
         list: {result}
@@ -85,8 +116,7 @@ var AppComponent = React.createClass({
     })
   },
   handleDeleteClick: function(questionId) {
-    var username = user? user : '';
-    var params = "id=" + questionId + "&userid=" + username;
+    var params = "id=" + questionId + "&userid=" + this.state.username;
     this.serverRequest = $.getJSON('/api/deletepoll?'+params, function (result) {
       console.log(result);
       this.hideAll();
@@ -108,22 +138,26 @@ var AppComponent = React.createClass({
     })
   },
   render: function() {
-    var username = user? user : '';
-    var createNewDisplay = user? <CreateNew onClick={this.handleCreateNewClick}/> : null;
-    var myPollsDisplay = user?(<button onClick={this.showMyPolls} className="btn btn-primary waves-effect waves-light mypollsbtn"> My Polls </button>) : null;
     return (<div className="jumbotron container">
-      <div className="header">
-        <button onClick={this.returnToHomeView} className="btn btn-primary waves-effect waves-light loginbtn">
-          Home
-        </button>
-        <LoginArea loginHandler={this.handleLogin}/>
-        {myPollsDisplay}
-      </div>
-      {createNewDisplay}
+    <nav className="navbar navbar-toggleable-md navbar-dark bg-primary">
+        <div className="container">
+            <button className="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNav1" aria-controls="navbarNav1" aria-expanded="false" aria-label="Toggle navigation">
+                <span className="navbar-toggler-icon"></span>
+            </button>
+            <a className="navbar-brand" onClick={this.returnToHomeView}>
+                <strong>Voting App</strong>
+            </a>
+            <div className="collapse navbar-collapse" id="navbarNav1">
+                <ul className="navbar-nav mr-auto">
+                </ul>
+                <DropdownComponent loggedin={this.state.loggedin} username={this.state.username} logoutfunc={this.logout} mypollsfunc={this.showMyPolls} newpollfunc={this.handleCreateNewClick}/>
+            </div>
+        </div>
+    </nav>
       {this.state.showList? <ListArea onClick={this.handleSelectPoll} setGlobalList={this.setGlobalList}/> : null}
       {this.state.showCreateNew && !this.state.showList?<CreateNewArea displayfunc={this.handleSubmitNewClick}/> : null}
-      {this.state.showPollDetails && !this.state.showList?<PollDetailsArea content={this.state.pollTarget} voteClick={this.handleVoteClick} deleteClick={this.handleDeleteClick}/> : null}
-      {this.state.showMyPolls && !this.state.showList?<MyPolls user={username} globalList={this.state.globalList} selectPoll={this.handleSelectPoll}/>:null}
+      {this.state.showPollDetails && !this.state.showList?<PollDetailsArea username={this.state.username} content={this.state.pollTarget} voteClick={this.handleVoteClick} deleteClick={this.handleDeleteClick}/> : null}
+      {this.state.showMyPolls && !this.state.showList?<MyPolls user={this.state.username} globalList={this.state.globalList} selectPoll={this.handleSelectPoll}/>:null}
       </div>);
   }
 });

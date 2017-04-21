@@ -14,10 +14,10 @@ var PollDetailsArea = React.createClass({
     var output = this.props.content.answers.map(function(data, i) {
       return <button className="btn btn-info btn-wide" key={i} onClick={this.props.voteClick.bind(null, this.props.content._id, data)}>{data}</button>
     }, this);
-    var deleteDisplay = this.props.content.creator_id === user? <button className="btn btn-danger btn-wide" onClick={this.props.deleteClick.bind(null, this.props.content._id)}>Delete this poll</button> : null;
-    var newOptionDisplay = user? <input className="inputBox" type="text" placeholder="Don't like these options? Add your own!" onChange={this.handleChangeCustom}/> : null;
+    var deleteDisplay = this.props.content.creator_id === this.props.username? <button className="btn btn-danger btn-wide" onClick={this.props.deleteClick.bind(null, this.props.content._id)}>Delete this poll</button> : null;
+    var newOptionDisplay = this.props.username? <input className="inputBox" type="text" placeholder="Don't like these options? Add your own!" onChange={this.handleChangeCustom}/> : null;
     var url = "http://voting-app-decky.herokuapp.com/api/poll/"+this.props.content._id;
-    var shareDisplay = user? <div type="text">{url}</div> : null;
+    var shareDisplay = this.props.username? <div type="text">{url}</div> : null;
     return (<div className="contentBox">
     <div className="paddedText head windowHeading" >{this.props.content.question}</div>
     <div className="boxContent grid-by-rows">

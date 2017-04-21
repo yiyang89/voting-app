@@ -16,12 +16,12 @@ var MyPolls = React.createClass({
     // # Voters
     // # Options
     var output = myPollArray.map(function(data, i) {
-      return (<div className='pollBox pollAggregateBox' key={i} onClick={this.props.selectPoll.bind(null, data)}>
+      return (<div className='card selectablecard' key={i} onClick={this.props.selectPoll.bind(null, data)}>
                 {data.question}
                 <p className='subtext'># Voters: {data.voted.length}</p>
                 <p className='subtext'># Options: {data.answers.length}</p>
                 </div>)
     }.bind(this));
-    return <div>{output}</div>;
+    return <div className="grid-by-rows">{output}</div>;
   }
 });
