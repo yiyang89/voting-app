@@ -2,6 +2,23 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var fs = require('fs');
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+// SET THIS TO A DB ON MLAB FOR DEPLOYMENT.
+var url = process.env.MONGO_ADDRESS;
+var mongo;
+MongoClient.connect(url, function (err, db) {
+  if (err) {
+    // TODO: HANDLE THIS SITUATION GRACEFULLY SO THE SERVER TRIES TO CONNECT AGAIN
+    console.log ('Unable to connect to the mongoDB server: ' + err);
+  } else {
+    console.log('Connected to mongodb');
+    mongo = db;
+    app.listen(app.get('port'), function() {
+      console.log('Node app is running on port', app.get('port'));
+    });
+  }
+});
 var mongowrap = require('./scripts/mongowrap.js');
 var passport = require('passport');
 app.use(passport.initialize());
@@ -38,7 +55,7 @@ passport.use(new GoogleStrategy({
     console.log("REFRESH TOKEN: " + JSON.stringify(refreshToken));
     // Store data in mongo collection
     // console.log(done);
-    mongowrap.saveToken(accessToken, profile, function(err, result) {
+    mongowrap.saveToken(mongo, accessToken, profile, function(err, result) {
       if (err) {
         console.log(err);
       } else {
@@ -64,7 +81,7 @@ app.get('/', function(request, response) {
 
 app.get('/tokendetails/:ACCESSTOKEN', function(request, response) {
   // Query mongodb for profile corresponding to access token.
-  mongowrap.getTokenDetails(request.params.ACCESSTOKEN, function(err, result) {
+  mongowrap.getTokenDetails(mongo, request.params.ACCESSTOKEN, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -77,7 +94,7 @@ app.get('/tokendetails/:ACCESSTOKEN', function(request, response) {
 
 app.get('/logout/:ACCESSTOKEN', function(request, response) {
   // Delete profile with this access token from mongodb.
-  mongowrap.removeToken(request.params.ACCESSTOKEN, function(err, result) {
+  mongowrap.removeToken(mongo, request.params.ACCESSTOKEN, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -89,7 +106,7 @@ app.get('/logout/:ACCESSTOKEN', function(request, response) {
 // Request to backend for initial polls.
 app.get('/api/getpolls', function(request, response) {
   // Query mongodb for all polls and return.
-  mongowrap.getPolls(function(err, result) {
+  mongowrap.getPolls(mongo, function(err, result) {
     // Flip before returning so latest shows first.
     result = result.reverse();
     response.send(result);
@@ -103,7 +120,7 @@ app.get('/api/createpoll/', function(request, response) {
   // Create a poll for me to play with.
   console.log("making call to mongowrap to create new poll");
   // console.log(request.query);
-  mongowrap.createPoll(request.query.userid, request.query.question, request.query.answer, function (err, result) {
+  mongowrap.createPoll(mongo, request.query.userid, request.query.question, request.query.answer, function (err, result) {
     // console.log(result);
     if (err) {
       response.send({"message":"An error was encountered"});
@@ -121,7 +138,7 @@ app.get('/api/votepoll', function(request, response) {
      request.socket.remoteAddress ||
      request.connection.socket.remoteAddress;
   console.log(ip);
-  mongowrap.votePoll(ip, request.query.id, request.query.answer, request.query.userid, function(err, data) {
+  mongowrap.votePoll(mongo, ip, request.query.id, request.query.answer, request.query.userid, function(err, data) {
     if (err) {
       console.log("Mongo vote error: " + err);
       response.send({"ERROR:":err});
@@ -134,7 +151,7 @@ app.get('/api/votepoll', function(request, response) {
 // Request to backend for poll deletion
 app.get('/api/deletepoll', function(request, response) {
   //  Get userid and pollid from POLL_PARAMS
-  mongowrap.deletePoll(request.query.id, request.query.userid, function(err, data) {
+  mongowrap.deletePoll(mongo, request.query.id, request.query.userid, function(err, data) {
     if (err) {
       console.log("Mongo delete error: " + err);
       response.send({"ERROR":err});
@@ -152,7 +169,7 @@ app.get('/api/deletepoll', function(request, response) {
 // Request to backend to load a specific poll page
 app.get('/api/poll/:POLLID', function (request, response) {
   // Get polls from mongo
-  mongowrap.getPolls(function(err, result) {
+  mongowrap.getPolls(mongo, function(err, result) {
     // Find the poll matching request.params.POLLID
     var pollResult;
     console.log(JSON.stringify(result));
@@ -186,9 +203,4 @@ function(request, response) {
   if (request.user) {
     response.render('pages/index', {'user':request.user[1].name.givenName, 'token':request.user[0], 'poll': null});
   } else { response.jsonp(401); }
-});
-
-
-app.listen(app.get('port'), function() {
-  console.log('Node app is running on port', app.get('port'));
 });

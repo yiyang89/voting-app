@@ -76,3 +76,7 @@ body {
   width: 70% !important;
   margin-top: 5%;
 }
+#chart_div {
+  width: 70%;
+  height: 30vh;
+}

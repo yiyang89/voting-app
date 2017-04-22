@@ -36,6 +36,13 @@ var GoogleDonut = React.createClass({
   componentDidMount: function() {
     google.charts.load("visualization", "1", {packages:["corechart"]});
     google.charts.setOnLoadCallback(this.drawCharts);
+    window.addEventListener('resize', this._handleWindowResize);
+  },
+  componentWillUnmount: function() {
+    window.removeEventListener('resize', this._handleWindowResize);
+  },
+  _handleWindowResize: function() {
+    this.drawCharts();
   },
   drawCharts: function() {
     // Process the voted array.
@@ -69,8 +76,6 @@ var GoogleDonut = React.createClass({
     );
     // Set chart options
     var options = {
-      'width':600,
-      'height':500,
       'pieHole':0.4,
       'pieSliceBorderColor':"#eeeeee"};
 
