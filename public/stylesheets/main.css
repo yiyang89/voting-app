@@ -41,6 +41,9 @@ body {
   height:300px;
   width:300px;
 }
+.redtext {
+  color: #ef9a9a;
+}
 .btn-wide {
   width: 70%;
 }

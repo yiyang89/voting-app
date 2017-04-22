@@ -88,7 +88,19 @@ var AppComponent = React.createClass({
       // On vote success: show confirmation?
       // On vote failure: You have already voted on this poll
       console.log(result);
-    });
+      if (result.hasOwnProperty("message")) {
+        // Set message and toggle showpolldetails off/on to redraw component
+        // *** just a workaround
+        this.setGlobalList(result.message);
+        this.setState({
+          pollTarget: result.message.reduce(function(acc, entry) {
+            if (entry._id === questionId) {
+              return entry;
+            }
+          })
+        });
+      }
+    }.bind(this));
     // this.setState({showCreateNew: false});
   },
   handleSubmitNewClick: function(question, answers) {
@@ -101,11 +113,8 @@ var AppComponent = React.createClass({
     });
     var params = "question=" + question + answerParam + "&userid=" + this.state.username;
     this.serverRequest = $.getJSON('/api/createpoll?'+params, function (result) {
-      this.setState({
-        list: {result}
-      });
+      this.setState({globalList: result.message, showCreateNew: false, showList: true});
     }.bind(this));
-    this.setState({showCreateNew: false, showList: true});
   },
   handleSelectPoll: function(pollObject) {
     console.log(JSON.stringify(pollObject));
@@ -131,7 +140,6 @@ var AppComponent = React.createClass({
     })
   },
   showMyPolls: function() {
-    console.log("Theres nothing here yet!");
     this.hideAll();
     this.setState({
       showMyPolls: true
@@ -154,7 +162,7 @@ var AppComponent = React.createClass({
             </div>
         </div>
     </nav>
-      {this.state.showList? <ListArea onClick={this.handleSelectPoll} setGlobalList={this.setGlobalList}/> : null}
+      {this.state.showList? <ListArea user={this.state.username} selectPoll={this.handleSelectPoll} setGlobalList={this.setGlobalList}/> : null}
       {this.state.showCreateNew && !this.state.showList?<CreateNewArea displayfunc={this.handleSubmitNewClick}/> : null}
       {this.state.showPollDetails && !this.state.showList?<PollDetailsArea username={this.state.username} content={this.state.pollTarget} voteClick={this.handleVoteClick} deleteClick={this.handleDeleteClick}/> : null}
       {this.state.showMyPolls && !this.state.showList?<MyPolls user={this.state.username} globalList={this.state.globalList} selectPoll={this.handleSelectPoll}/>:null}

@@ -11,8 +11,17 @@ var PollDetailsArea = React.createClass({
   },
   render: function() {
     // Box should contain a form for voting on a poll, and display existing poll stats
+    var disabledFlag = false;
+    var selected = null;
+    this.props.content.voted.forEach(function(entry) {
+      if (entry.user_id === this.props.username) {
+        disabledFlag = true;
+        selected = entry.answer;
+      }
+    }.bind(this));
     var output = this.props.content.answers.map(function(data, i) {
-      return <button className="btn btn-info btn-wide" key={i} onClick={this.props.voteClick.bind(null, this.props.content._id, data)}>{data}</button>
+      var classSet = disabledFlag && data === selected? "btn btn-primary btn-wide" : "btn btn-info btn-wide";
+      return <button className={classSet} key={i} onClick={this.props.voteClick.bind(null, this.props.content._id, data)} disabled={disabledFlag}>{data}</button>
     }, this);
     var deleteDisplay = this.props.content.creator_id === this.props.username? <button className="btn btn-danger btn-wide" onClick={this.props.deleteClick.bind(null, this.props.content._id)}>Delete this poll</button> : null;
     var newOptionDisplay = this.props.username? <input className="inputBox" type="text" placeholder="Don't like these options? Add your own!" onChange={this.handleChangeCustom}/> : null;
@@ -22,7 +31,7 @@ var PollDetailsArea = React.createClass({
     <div className="paddedText head windowHeading" >{this.props.content.question}</div>
     <div className="boxContent grid-by-rows">
     {output}
-    {newOptionDisplay}
+    {disabledFlag? null : newOptionDisplay}
     {this.state.customOption?<button className="btn btn-info btn-wide" onClick={this.props.voteClick.bind(null, this.props.content._id, this.state.customOption)}>{this.state.customOption}</button> : <div/>}
     <div id="chart_div"><GoogleDonut data={this.props.content.voted} target="chart_div"/></div>
     {shareDisplay}
@@ -40,6 +49,9 @@ var GoogleDonut = React.createClass({
   },
   componentWillUnmount: function() {
     window.removeEventListener('resize', this._handleWindowResize);
+  },
+  componentDidUpdate: function() {
+    this.drawCharts();
   },
   _handleWindowResize: function() {
     this.drawCharts();

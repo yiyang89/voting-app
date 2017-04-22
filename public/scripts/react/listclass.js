@@ -17,7 +17,22 @@ var ListArea = React.createClass({
     var output;
     if (this.state.list.result) {
       output = this.state.list.result.map(function(data, i) {
-          return <div className='card selectablecard' key={i} onClick={this.props.onClick.bind(null, data)}>{data.question}</div>;
+        // Check if user has voted on this poll before.
+        // More efficient way to handle this may be to add a voted names array into mongo
+        var userHasVoted = false;
+        data.voted.forEach(function(entry) {
+          if (entry.user_id === this.props.user) {
+            userHasVoted = true;
+          }
+        }.bind(this));
+        return (
+          <div className='card selectablecard' key={i} onClick={this.props.selectPoll.bind(null, data)}>
+            {data.question}
+          <p className='subtext'># Voters: {data.voted.length}</p>
+          <p className='subtext'># Options: {data.answers.length}</p>
+          {userHasVoted? <p className='subtext redtext'>You voted on this poll</p> : null}
+          </div>
+          );
       }, this)
     } else {
       output = '';

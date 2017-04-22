@@ -125,7 +125,15 @@ app.get('/api/createpoll/', function(request, response) {
     if (err) {
       response.send({"message":"An error was encountered"});
     } else {
-      response.send({"message":"Successfully added the poll to db"});
+      // Send updated globalList to front end.
+      // response.send({"message":"Successfully added the poll to db"});
+      mongowrap.getPolls(mongo, function(err, result) {
+        if (err) {
+          response.send({"message": "An error was encountered"});
+        } else {
+          response.send({"message": result});
+        }
+      })
     }
   });
 });
@@ -143,7 +151,11 @@ app.get('/api/votepoll', function(request, response) {
       console.log("Mongo vote error: " + err);
       response.send({"ERROR:":err});
     } else {
-      response.send({"message":"Successfully voted on this poll"});
+      // response.send({"message":"Successfully voted on this poll"});
+      // Send updated poll data as response.
+      mongowrap.getPolls(mongo, function(err, result) {
+        response.send({"message":result});
+      })
     }
   });
 })
