@@ -88,7 +88,9 @@ var AppComponent = React.createClass({
       // On vote success: show confirmation?
       // On vote failure: You have already voted on this poll
       console.log(result);
-      if (result.hasOwnProperty("message")) {
+      if (result.hasOwnProperty("ERROR")) {
+        alert('A user from your ip has already voted on this poll');
+      } else if (result.hasOwnProperty("message")) {
         // Set message and toggle showpolldetails off/on to redraw component
         // *** just a workaround
         this.setGlobalList(result.message);

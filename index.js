@@ -149,7 +149,7 @@ app.get('/api/votepoll', function(request, response) {
   mongowrap.votePoll(mongo, ip, request.query.id, request.query.answer, request.query.userid, function(err, data) {
     if (err) {
       console.log("Mongo vote error: " + err);
-      response.send({"ERROR:":err});
+      response.send({"ERROR":err});
     } else {
       // response.send({"message":"Successfully voted on this poll"});
       // Send updated poll data as response.
