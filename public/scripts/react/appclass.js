@@ -148,7 +148,7 @@ var AppComponent = React.createClass({
     })
   },
   render: function() {
-    return (<div className="jumbotron container">
+    return (<div>
     <nav className="navbar navbar-toggleable-md navbar-dark bg-primary">
         <div className="container">
             <button className="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNav1" aria-controls="navbarNav1" aria-expanded="false" aria-label="Toggle navigation">
