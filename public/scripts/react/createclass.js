@@ -1,12 +1,18 @@
-var CreateNew = React.createClass({
-  render: function() {
-    // Has inherited an onclick prop from its parent on creation
-    return (<div className="createNew" onClick={this.props.onClick}>Create New</div>);
-  }
-})
+import React from "react";
 
-var CreateNewArea = React.createClass({
-  handleClick: function(event) {
+class CreateNewArea extends React.Component{
+  constructor(props){
+    super(props);
+
+    // Bind this for custom methods
+    this.handleClick = this.handleClick.bind(this);
+    this.handleChangeQuestion = this.handleChangeQuestion.bind(this);
+    this.handleChangeAnswers = this.handleChangeAnswers.bind(this);
+    this.handleAddOption = this.handleAddOption.bind(this);
+
+    this.state = {question: '', answers: ['','']};
+  }
+  handleClick(event) {
     var validAnswers = 0;
     this.state.answers.forEach(function(entry) {if (entry !== '') {validAnswers++}});
     if (this.state.question !== '' && validAnswers >= 2) {
@@ -14,25 +20,26 @@ var CreateNewArea = React.createClass({
       } else {
       alert('Please ensure you have filled out a question and at least 2 answers');
     }
-  },
-  handleChangeQuestion: function(event) {
+  }
+
+  handleChangeQuestion(event) {
     this.setState({question: event.target.value});
-  },
-  handleChangeAnswers: function(index, event) {
+  }
+
+  handleChangeAnswers(index, event) {
     // this.setState({answer1: event.target.value});
     var newAnswerArray = this.state.answers;
     newAnswerArray[index] = event.target.value;
     this.setState({answers: newAnswerArray});
-  },
-  handleAddOption: function() {
+  }
+
+  handleAddOption() {
     var newAnswerArray = this.state.answers;
     newAnswerArray.push('');
     this.setState({answers: newAnswerArray});
-  },
-  getInitialState: function() {
-    return {question: '', answers: ['','']};
-  },
-  render: function() {
+  }
+
+  render() {
     // Depending on number of answers (populated on onchange)
     // Add or remove number of answer input boxes (this.state.answers.length + 1)
     // Same with preview answer buttons.
@@ -63,4 +70,6 @@ var CreateNewArea = React.createClass({
               </div>
           </div>);
   }
-})
+}
+
+export default CreateNewArea;

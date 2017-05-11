@@ -1,24 +1,44 @@
-console.log("voting.js loaded successfully");
+import React from "react";
+import DropdownComponent from "./dropdownclass";
+import ListArea from "./listclass";
+import CreateNewArea from "./createclass";
+import PollDetailsArea from "./pollclass";
+import MyPolls from "./mypollsclass";
+
 
 // React classes
-var AppComponent = React.createClass({
-  getInitialState: function() {
-    if (myPoll) {
-      return {
+class AppComponent extends React.Component{
+  constructor(props) {
+    super(props);
+
+    // Bind this for custom methods.
+    this.logout = this.logout.bind(this);
+    this.hideAll = this.hideAll.bind(this);
+    this.setGlobalList = this.setGlobalList.bind(this);
+    this.returnToHomeView = this.returnToHomeView.bind(this);
+    this.handleCreateNewClick = this.handleCreateNewClick.bind(this);
+    this.handleVoteClick = this.handleVoteClick.bind(this);
+    this.handleSubmitNewClick = this.handleSubmitNewClick.bind(this);
+    this.handleSelectPoll = this.handleSelectPoll.bind(this);
+    this.handleDeleteClick = this.handleDeleteClick.bind(this);
+    this.showMyPolls = this.showMyPolls.bind(this);
+
+    if (this.props.myPoll) {
+      this.state = {
         showList: false,
-        pollTarget: myPoll,
+        pollTarget: this.props.myPoll,
         showCreateNew: false,
         showPollDetails: true,
         globalList: []
       };
     } else {
-      var login = accessTokenFromServer? true : false;
+      var login = this.props.servertoken? true : false;
       if (login) {
-        localStorage._decky_accesstoken = accessTokenFromServer;
+        localStorage._decky_accesstoken = this.props.servertoken;
       }
-      return {
-        username: username,
-        accesstokenserver: accessTokenFromServer,
+      this.state = {
+        username: this.props.username,
+        accesstokenserver: this.props.servertoken,
         accesstokenlocal: localStorage._decky_accesstoken,
         loggedin: login,
         showList: true,
@@ -28,8 +48,9 @@ var AppComponent = React.createClass({
         globalList: []
       };
     }
-  },
-  componentWillMount: function() {
+  }
+
+  componentDidMount() {
     if (localStorage._decky_accesstoken) {
       // User is currently logged in
         $.getJSON('/tokendetails/'+localStorage._decky_accesstoken, function(result) {
@@ -41,10 +62,11 @@ var AppComponent = React.createClass({
           })
         }.bind(this))
     }
-  },
-  logout: function() {
+  }
+
+  logout() {
     // Empty localstorage
-    $.getJSON('/logout/'+accessTokenFromServer, function(result) {
+    $.getJSON('/logout/'+this.props.servertoken, function(result) {
       localStorage._decky_accesstoken = null;
       this.setState({
         username: null,
@@ -54,33 +76,38 @@ var AppComponent = React.createClass({
       });
       console.log("logged out.");
     }.bind(this));
-  },
-  hideAll: function() {
+  }
+
+  hideAll() {
     this.setState({
       showList: false,
       showCreateNew: false,
       showPollDetails: false,
       showMyPolls: false
     })
-  },
-  setGlobalList: function(result) {
+  }
+
+  setGlobalList(result) {
     this.setState({
       globalList: {result}
     })
-  },
-  returnToHomeView: function() {
+  }
+
+  returnToHomeView() {
     this.hideAll();
     this.setState({
       showList: true,
     })
-  },
-  handleCreateNewClick: function() {
+  }
+
+  handleCreateNewClick() {
     this.hideAll();
     this.setState({
       showCreateNew: true
     });
-  },
-  handleVoteClick: function(questionId, option) {
+  }
+
+  handleVoteClick(questionId, option) {
     // Request to server to add a vote
     var params = "id=" + questionId + "&answer=" + encodeURI(option) + "&userid=" + this.state.username;
     console.log("Sending params: " + params);
@@ -104,8 +131,9 @@ var AppComponent = React.createClass({
       }
     }.bind(this));
     // this.setState({showCreateNew: false});
-  },
-  handleSubmitNewClick: function(question, answers) {
+  }
+
+  handleSubmitNewClick(question, answers) {
     // submit question, answer1 and answer2 to the server.
     // Implement a check for EMPTY question, answer1, or answer2
     console.log(answers);
@@ -117,16 +145,18 @@ var AppComponent = React.createClass({
     this.serverRequest = $.getJSON('/api/createpoll?'+params, function (result) {
       this.setState({globalList: result.message, showCreateNew: false, showList: true});
     }.bind(this));
-  },
-  handleSelectPoll: function(pollObject) {
+  }
+
+  handleSelectPoll(pollObject) {
     console.log(JSON.stringify(pollObject));
     this.hideAll();
     this.setState({
       pollTarget: pollObject,
       showPollDetails: true
     })
-  },
-  handleDeleteClick: function(questionId) {
+  }
+
+  handleDeleteClick(questionId) {
     var params = "id=" + questionId + "&userid=" + this.state.username;
     this.serverRequest = $.getJSON('/api/deletepoll?'+params, function (result) {
       console.log(result);
@@ -135,19 +165,22 @@ var AppComponent = React.createClass({
         showList: true
       });
     }.bind(this));
-  },
-  handleLogin: function() {
-    this.serverRequest = $.getJSON(host+'/api/login', function (result) {
-      console.log(result);
-    })
-  },
-  showMyPolls: function() {
+  }
+
+  // handleLogin() {
+  //   this.serverRequest = $.getJSON(host+'/api/login', function (result) {
+  //     console.log(result);
+  //   })
+  // }
+
+  showMyPolls() {
     this.hideAll();
     this.setState({
       showMyPolls: true
     })
-  },
-  render: function() {
+  }
+
+  render() {
     return (<div>
     <nav className="navbar navbar-toggleable-md navbar-dark bg-primary">
         <div className="container">
@@ -170,4 +203,6 @@ var AppComponent = React.createClass({
       {this.state.showMyPolls && !this.state.showList?<MyPolls user={this.state.username} globalList={this.state.globalList} selectPoll={this.handleSelectPoll}/>:null}
       </div>);
   }
-});
+}
+
+export default AppComponent;

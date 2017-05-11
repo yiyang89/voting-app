@@ -1,18 +1,23 @@
-var ListArea = React.createClass({
-  getInitialState: function() {
-    return {list: []};
-  },
-  componentDidMount: function() {
+import React from "react";
+
+class ListArea extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {list: []};
+  }
+
+  componentDidMount() {
     // Get poll list from server
     this.serverRequest = $.getJSON('/api/getpolls', function (result) {
       this.setState({
         list: {result}
       });
-      console.log(JSON.stringify(result));
+      // console.log(JSON.stringify(result));
       this.props.setGlobalList(result);
     }.bind(this));
-  },
-  render: function() {
+  }
+
+  render() {
     // Return either a button or a welcome message based on global being set.
     var output;
     if (this.state.list.result) {
@@ -41,4 +46,6 @@ var ListArea = React.createClass({
       {output}
       </div>)
   }
-});
+}
+
+export default ListArea;

@@ -1,5 +1,7 @@
-var DropdownComponent = React.createClass({
-  render: function() {
+import React from "react";
+
+class DropdownComponent extends React.Component {
+  render() {
     // Login is a single item
     // If logged in, display dropdown.
     var dropdown;
@@ -23,4 +25,6 @@ var DropdownComponent = React.createClass({
     }
     return dropdown;
   }
-})
+}
+
+export default DropdownComponent;

@@ -1,5 +1,7 @@
-var MyPolls = React.createClass({
-  render: function() {
+import React from "react";
+
+class MyPolls extends React.Component {
+  render() {
     console.log(JSON.stringify(this.props.globalList.result));
     // Filter globalList and only show polls with the same userid as
     //  in this.props.user
@@ -31,4 +33,6 @@ var MyPolls = React.createClass({
     }.bind(this));
     return <div className="grid-by-rows">{output}</div>;
   }
-});
+}
+
+export default MyPolls;
